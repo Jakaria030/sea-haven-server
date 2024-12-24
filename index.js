@@ -29,7 +29,7 @@ async function run() {
 
     // create database collection
     const roomsCollection = client.db('seaHaven').collection('rooms');
-    const bookedRoomCollection = client.db('seaHaven').collection('bookedRoom');
+    const bookedRoomCollection = client.db('seaHaven').collection('bookedRooms');
 
 
     // rooms releated api start
@@ -72,6 +72,23 @@ async function run() {
       const result = await roomsCollection.updateOne(query, updatedRoom);
 
       res.send(result);
+    });
+
+    // booked rooms get
+    app.get('/booked-room', async(req, res) => {
+      const email = req.query.email;
+
+      const bookings = await bookedRoomCollection.find({email}).toArray();
+      const roomsIds = bookings.map(bookingDetail => new ObjectId(bookingDetail.roomId))
+
+      const filter = {
+        _id: {
+          $in: roomsIds
+        }
+      };
+
+      const rooms = await roomsCollection.find(filter).toArray();
+      res.send({bookings, rooms})
     });
     // rooms releated api end
 
