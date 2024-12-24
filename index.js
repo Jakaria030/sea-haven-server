@@ -29,6 +29,7 @@ async function run() {
 
     // create database collection
     const roomsCollection = client.db('seaHaven').collection('rooms');
+    const bookedRoomCollection = client.db('seaHaven').collection('bookedRoom');
 
 
     // rooms releated api start
@@ -45,6 +46,14 @@ async function run() {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await roomsCollection.findOne(query);
+
+      res.send(result);
+    });
+
+    // stor booking details
+    app.post('/booked-room', async(req, res) => {
+      const {newBooking} = req.body;
+      const result = await bookedRoomCollection.insertOne(newBooking);
 
       res.send(result);
     });
