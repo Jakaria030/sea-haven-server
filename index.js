@@ -57,6 +57,22 @@ async function run() {
 
       res.send(result);
     });
+
+    // update room status
+    app.patch('/rooms/:id', async(req, res) => {
+      const id = req.params.id;
+      const {is_booked} = req.body;
+      const query = {_id: new ObjectId(id)};
+      const updatedRoom = {
+        $set: {
+          is_booked
+        }
+      };
+
+      const result = await roomsCollection.updateOne(query, updatedRoom);
+
+      res.send(result);
+    });
     // rooms releated api end
 
 
