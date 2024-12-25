@@ -101,6 +101,21 @@ async function run() {
       res.send(result);
     })
 
+    // dont allow same room added multiple time
+    app.get('/single-room-get', async(req, res) => {
+      const room_id = req.query.room_id;
+      const user_email = req.query.user_email;
+
+      const query = {
+        roomId: room_id,
+        email: user_email
+      };
+
+      const result = await bookedRoomsCollection.findOne(query);
+
+      res.send(result);
+    });
+
     // update booked room status
     app.patch('/booked-room/:booking_id', async (req, res) => {
       const booking_id = req.params.booking_id;
@@ -162,6 +177,17 @@ async function run() {
 
       res.send({ count });
     });
+
+    app.get("/reviews", async (req, res) => {
+        const reviews = await reviewsCollection
+          .find({})
+          .sort({ reviewDate: -1 }) 
+          .limit(6)
+          .toArray();
+    
+        res.send(reviews);
+    });
+    
     // review related api end
 
 
@@ -190,7 +216,7 @@ async function run() {
             },
           },
           {
-            $sort: { averageRating: -1, totalReviews: -1 },
+            $sort: { totalReviews: -1 , averageRating: -1},
           },
           {
             $limit: 6,
