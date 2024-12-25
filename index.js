@@ -100,6 +100,40 @@ async function run() {
 
       res.send(result);
     })
+
+    // update booked room status
+    app.patch('/booked-room/:booking_id', async(req, res) => {
+      const booking_id = req.params.booking_id;
+      const {isCancel} = req.body;
+      const query = {_id: new ObjectId(booking_id)};
+      const updatedRoom = {
+        $set: {
+          isCancel
+        }
+      };
+
+      const result = await bookedRoomsCollection.updateOne(query, updatedRoom);
+
+      res.send(result);
+    });
+
+    // updated check in date
+    app.patch('/booked-room-release/:booked_id', async(req, res) => {
+      const booked_id = req.params.booked_id;
+      const {bookingDate, checkInDate, isCancel} = req.body;
+      const query = {_id: new ObjectId(booked_id)};
+      const updateDate = {
+        $set: {
+          bookingDate,
+          checkInDate,
+          isCancel,
+        }
+      };
+
+      const result = await bookedRoomsCollection.updateOne(query, updateDate);
+
+      res.send(result);
+    });
     // booked related api end
 
     // review related api start
