@@ -93,6 +93,13 @@ async function run() {
       const rooms = await roomsCollection.find(filter).toArray();
       res.send({bookings, rooms})
     });
+
+    app.get('/booked-room/:id', async(req, res) => {
+      const id = req.params.id;
+      const result = await bookedRoomsCollection.findOne({roomId: id});
+
+      res.send(result);
+    })
     // booked related api end
 
     // review related api start
