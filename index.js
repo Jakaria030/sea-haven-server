@@ -112,6 +112,15 @@ async function run() {
 
       res.send(result);
     });
+
+    // count number of reviews
+    app.get('/count-reviews/:id', async(req, res) => {
+      const id = req.params.id;
+
+      const count = await reviewsCollection.countDocuments({roomId: id});
+
+      res.send({count});
+    });
     // review related api end
   
 
