@@ -29,10 +29,10 @@ async function run() {
 
     // create database collection
     const roomsCollection = client.db('seaHaven').collection('rooms');
-    const bookedRoomCollection = client.db('seaHaven').collection('bookedRooms');
+    const bookedRoomsCollection = client.db('seaHaven').collection('bookedRooms');
+    const reviewsCollection = client.db('seaHaven').collection('reviews')
 
-
-    // rooms releated api start
+    // rooms related api start
     // get rooms
     app.get('/rooms', async(req, res) => {
       const cursor = roomsCollection.find();
@@ -46,14 +46,6 @@ async function run() {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await roomsCollection.findOne(query);
-
-      res.send(result);
-    });
-
-    // stor booking details
-    app.post('/booked-room', async(req, res) => {
-      const {newBooking} = req.body;
-      const result = await bookedRoomCollection.insertOne(newBooking);
 
       res.send(result);
     });
@@ -73,12 +65,23 @@ async function run() {
 
       res.send(result);
     });
+    // rooms related api end
 
-    // booked rooms get
+    // booked related api start
+    // stor booking details
+    app.post('/booked-room', async(req, res) => {
+      const {newBooking} = req.body;
+      const result = await bookedRoomsCollection.insertOne(newBooking);
+
+      res.send(result);
+    });
+
+    
+    // booked rooms read
     app.get('/booked-room', async(req, res) => {
       const email = req.query.email;
 
-      const bookings = await bookedRoomCollection.find({email}).toArray();
+      const bookings = await bookedRoomsCollection.find({email}).toArray();
       const roomsIds = bookings.map(bookingDetail => new ObjectId(bookingDetail.roomId))
 
       const filter = {
@@ -90,7 +93,18 @@ async function run() {
       const rooms = await roomsCollection.find(filter).toArray();
       res.send({bookings, rooms})
     });
-    // rooms releated api end
+    // booked related api end
+
+    // review related api start
+    // post reveiw
+    app.post('/review-room', async(req, res) => {
+      const {newReview} = req.body;
+      const result = await reviewsCollection.insertOne(newReview);
+      
+      res.send(result);
+    });
+    // review related api end
+  
 
 
 
