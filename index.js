@@ -35,7 +35,17 @@ async function run() {
     // rooms related api start
     // get rooms
     app.get('/rooms', async (req, res) => {
-      const cursor = roomsCollection.find();
+      const minPrice = parseFloat(req.query.minPrice) || 0;
+      const maxPrice = parseFloat(req.query.maxPrice) || 10000;
+
+      const query = {
+        room_price: {
+          $gte: minPrice,
+          $lte: maxPrice,
+        },
+      };
+
+      const cursor = roomsCollection.find(query);
       const result = await cursor.toArray();
 
       res.send(result);
@@ -102,7 +112,7 @@ async function run() {
     })
 
     // dont allow same room added multiple time
-    app.get('/single-room-get', async(req, res) => {
+    app.get('/single-room-get', async (req, res) => {
       const room_id = req.query.room_id;
       const user_email = req.query.user_email;
 
@@ -179,64 +189,64 @@ async function run() {
     });
 
     app.get("/reviews", async (req, res) => {
-        const reviews = await reviewsCollection
-          .find({})
-          .sort({ reviewDate: -1 }) 
-          .limit(6)
-          .toArray();
-    
-        res.send(reviews);
+      const reviews = await reviewsCollection
+        .find({})
+        .sort({ reviewDate: -1 })
+        .limit(6)
+        .toArray();
+
+      res.send(reviews);
     });
-    
+
     // review related api end
 
 
     // toop rooms for home page
     app.get('/top-rooms', async (req, res) => {
-   
-        const topRooms = await roomsCollection.aggregate([
-          {
-            $lookup: {
-              from: "reviews",
-              let: { roomId: { $toString: "$_id" } },  
-              pipeline: [
-                {
-                  $match: {
-                    $expr: { $eq: ["$roomId", "$$roomId"] }
-                  }
+
+      const topRooms = await roomsCollection.aggregate([
+        {
+          $lookup: {
+            from: "reviews",
+            let: { roomId: { $toString: "$_id" } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ["$roomId", "$$roomId"] }
                 }
-              ],
-              as: "reviews",
-            },
+              }
+            ],
+            as: "reviews",
           },
-          {
-            $addFields: {
-              averageRating: { $avg: "$reviews.rating" },
-              totalReviews: { $size: "$reviews" },
-            },
+        },
+        {
+          $addFields: {
+            averageRating: { $avg: "$reviews.rating" },
+            totalReviews: { $size: "$reviews" },
           },
-          {
-            $sort: { totalReviews: -1 , averageRating: -1},
+        },
+        {
+          $sort: { totalReviews: -1, averageRating: -1 },
+        },
+        {
+          $limit: 6,
+        },
+        {
+          $project: {
+            _id: 1,
+            room_image: 1,
+            room_name: 1,
+            room_price: 1,
+            is_booked: 1,
+            room_description: 1,
+            totalReviews: 1,
           },
-          {
-            $limit: 6,
-          },
-          {
-            $project: {
-              _id: 1,
-              room_image: 1,
-              room_name: 1,
-              room_price: 1,
-              is_booked: 1,
-              room_description: 1,
-              totalReviews: 1,
-            },
-          },
-        ]).toArray();
-    
-        res.send(topRooms);
+        },
+      ]).toArray();
+
+      res.send(topRooms);
     });
-    
+
 
 
     // await client.db("admin").command({ ping: 1 });
