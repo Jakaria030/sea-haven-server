@@ -34,7 +34,7 @@ async function run() {
 
     // rooms related api start
     // get rooms
-    app.get('/rooms', async(req, res) => {
+    app.get('/rooms', async (req, res) => {
       const cursor = roomsCollection.find();
       const result = await cursor.toArray();
 
@@ -42,19 +42,19 @@ async function run() {
     });
 
     // get specific room
-    app.get('/rooms/:id', async(req, res) => {
+    app.get('/rooms/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await roomsCollection.findOne(query);
 
       res.send(result);
     });
 
     // update room status
-    app.patch('/rooms/:id', async(req, res) => {
+    app.patch('/rooms/:id', async (req, res) => {
       const id = req.params.id;
-      const {is_booked} = req.body;
-      const query = {_id: new ObjectId(id)};
+      const { is_booked } = req.body;
+      const query = { _id: new ObjectId(id) };
       const updatedRoom = {
         $set: {
           is_booked
@@ -69,19 +69,19 @@ async function run() {
 
     // booked related api start
     // stor booking details
-    app.post('/booked-room', async(req, res) => {
-      const {newBooking} = req.body;
+    app.post('/booked-room', async (req, res) => {
+      const { newBooking } = req.body;
       const result = await bookedRoomsCollection.insertOne(newBooking);
 
       res.send(result);
     });
 
-    
+
     // booked rooms read
-    app.get('/booked-room', async(req, res) => {
+    app.get('/booked-room', async (req, res) => {
       const email = req.query.email;
 
-      const bookings = await bookedRoomsCollection.find({email}).toArray();
+      const bookings = await bookedRoomsCollection.find({ email }).toArray();
       const roomsIds = bookings.map(bookingDetail => new ObjectId(bookingDetail.roomId))
 
       const filter = {
@@ -91,21 +91,21 @@ async function run() {
       };
 
       const rooms = await roomsCollection.find(filter).toArray();
-      res.send({bookings, rooms})
+      res.send({ bookings, rooms })
     });
 
-    app.get('/booked-room/:id', async(req, res) => {
+    app.get('/booked-room/:id', async (req, res) => {
       const id = req.params.id;
-      const result = await bookedRoomsCollection.findOne({roomId: id});
+      const result = await bookedRoomsCollection.findOne({ roomId: id });
 
       res.send(result);
     })
 
     // update booked room status
-    app.patch('/booked-room/:booking_id', async(req, res) => {
+    app.patch('/booked-room/:booking_id', async (req, res) => {
       const booking_id = req.params.booking_id;
-      const {isCancel} = req.body;
-      const query = {_id: new ObjectId(booking_id)};
+      const { isCancel } = req.body;
+      const query = { _id: new ObjectId(booking_id) };
       const updatedRoom = {
         $set: {
           isCancel
@@ -118,10 +118,10 @@ async function run() {
     });
 
     // updated check in date
-    app.patch('/booked-room-release/:booked_id', async(req, res) => {
+    app.patch('/booked-room-release/:booked_id', async (req, res) => {
       const booked_id = req.params.booked_id;
-      const {bookingDate, checkInDate, isCancel} = req.body;
-      const query = {_id: new ObjectId(booked_id)};
+      const { bookingDate, checkInDate, isCancel } = req.body;
+      const query = { _id: new ObjectId(booked_id) };
       const updateDate = {
         $set: {
           bookingDate,
@@ -138,34 +138,79 @@ async function run() {
 
     // review related api start
     // post reveiw
-    app.post('/review-room', async(req, res) => {
-      const {newReview} = req.body;
+    app.post('/review-room', async (req, res) => {
+      const { newReview } = req.body;
       const result = await reviewsCollection.insertOne(newReview);
-      
+
       res.send(result);
     });
 
     // get reviews of specific room
-    app.get('/reviews/:room_id', async(req, res) => {
+    app.get('/reviews/:room_id', async (req, res) => {
       const room_id = req.params.room_id;
-      const filter = {roomId: room_id};
+      const filter = { roomId: room_id };
       const result = await reviewsCollection.find(filter).toArray();
 
       res.send(result);
     });
 
     // count number of reviews
-    app.get('/count-reviews/:id', async(req, res) => {
+    app.get('/count-reviews/:id', async (req, res) => {
       const id = req.params.id;
 
-      const count = await reviewsCollection.countDocuments({roomId: id});
+      const count = await reviewsCollection.countDocuments({ roomId: id });
 
-      res.send({count});
+      res.send({ count });
     });
     // review related api end
-  
 
 
+    // toop rooms for home page
+    app.get('/top-rooms', async (req, res) => {
+   
+        const topRooms = await roomsCollection.aggregate([
+          {
+            $lookup: {
+              from: "reviews",
+              let: { roomId: { $toString: "$_id" } },  
+              pipeline: [
+                {
+                  $match: {
+                    $expr: { $eq: ["$roomId", "$$roomId"] }
+                  }
+                }
+              ],
+              as: "reviews",
+            },
+          },
+          {
+            $addFields: {
+              averageRating: { $avg: "$reviews.rating" },
+              totalReviews: { $size: "$reviews" },
+            },
+          },
+          {
+            $sort: { averageRating: -1, totalReviews: -1 },
+          },
+          {
+            $limit: 6,
+          },
+          {
+            $project: {
+              _id: 1,
+              room_image: 1,
+              room_name: 1,
+              room_price: 1,
+              is_booked: 1,
+              room_description: 1,
+              totalReviews: 1,
+            },
+          },
+        ]).toArray();
+    
+        res.send(topRooms);
+    });
+    
 
 
     // await client.db("admin").command({ ping: 1 });
@@ -179,9 +224,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('Sea Server is running...');
+  res.send('Sea Server is running...');
 });
 
 app.listen(port, () => {
-    console.log(`Sea Haven server is running on port: ${port}`);
+  console.log(`Sea Haven server is running on port: ${port}`);
 });
