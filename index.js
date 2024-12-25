@@ -103,6 +103,15 @@ async function run() {
       
       res.send(result);
     });
+
+    // get reviews of specific room
+    app.get('/reviews/:room_id', async(req, res) => {
+      const room_id = req.params.room_id;
+      const filter = {roomId: room_id};
+      const result = await reviewsCollection.find(filter).toArray();
+
+      res.send(result);
+    });
     // review related api end
   
 
