@@ -169,9 +169,13 @@ async function run() {
     })
 
     // dont allow same room added multiple time
-    app.get('/single-room-get', async (req, res) => {
+    app.get('/single-room-get', verifyToken ,async (req, res) => {
       const room_id = req.query.room_id;
       const user_email = req.query.user_email;
+
+      if(req.user.email !== user_email){
+        return res.status(403).send({message: 'Forbidden access.'});
+      }
 
       const query = {
         roomId: room_id,
@@ -220,8 +224,13 @@ async function run() {
 
     // review related api start
     // post reveiw
-    app.post('/review-room', async (req, res) => {
+    app.post('/review-room', verifyToken, async (req, res) => {
       const { newReview } = req.body;
+      
+      if(req.user.email !== newReview.email){
+        return res.status(403).send({message: 'Forbidden access.'});
+      }
+
       const result = await reviewsCollection.insertOne(newReview);
 
       res.send(result);
