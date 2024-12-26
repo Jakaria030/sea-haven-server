@@ -204,9 +204,14 @@ async function run() {
     });
 
     // updated check in date
-    app.patch('/booked-room-release/:booked_id', async (req, res) => {
+    app.patch('/booked-room-release/:booked_id', verifyToken, async (req, res) => {
       const booked_id = req.params.booked_id;
-      const { bookingDate, checkInDate, isCancel } = req.body;
+      const {email, bookingDate, checkInDate, isCancel } = req.body;
+
+      if(req.user.email !== email){
+        return res.status(403).send({message: 'Forbidden access.'});
+      }
+
       const query = { _id: new ObjectId(booked_id) };
       const updateDate = {
         $set: {
