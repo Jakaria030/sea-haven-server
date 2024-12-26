@@ -6,7 +6,16 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://sea-haven-7a097.web.app',
+      'https://sea-haven-7a097.firebaseapp.com'
+    ],
+    Credential: true
+})
+);
 app.use(express.json());
 
 // mongodb connection
@@ -247,6 +256,23 @@ async function run() {
       res.send(topRooms);
     });
 
+    // for count up section
+    app.get('/count-up', async(req, res) => {
+      const totalRooms = await roomsCollection.countDocuments();
+      const totalReviews = await reviewsCollection.countDocuments();
+      const totalRatingsResult = await reviewsCollection.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalRatings: { $sum: { $toInt: "$rating" } } 
+          }
+        }
+      ]).toArray();
+      
+      const totalRatings = totalRatingsResult[0]?.totalRatings || 0;   
+
+      res.send({totalRooms, totalReviews, totalRatings});
+    });
 
 
     // await client.db("admin").command({ ping: 1 });
