@@ -15,7 +15,7 @@ app.use(cors({
       'https://sea-haven-7a097.firebaseapp.com'
     ],
     credentials: true
-})
+  })
 );
 app.use(express.json());
 app.use(cookieParser());
@@ -300,7 +300,7 @@ async function run() {
           $sort: { totalReviews: -1, averageRating: -1 },
         },
         {
-          $limit: 6,
+          $limit: 8,
         },
         {
           $project: {
