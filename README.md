@@ -34,11 +34,11 @@ Follow these steps to set up and run the server locally:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/programming-hero-web-course2/b10a11-server-side-Jakaria030
+   git clone https://github.com/Jakaria030/sea-haven-server.git
    ```
 2. Navigate to the project directory:
    ```bash
-   cd b10a11-server-side-Jakaria030
+   cd sea-haven-server
    ```
 3. Install dependencies:
    ```bash
